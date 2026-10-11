@@ -12,6 +12,8 @@
         <quarkus.platform.version>3.13.3</quarkus.platform.version>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
         <compiler-plugin.version>3.11.0</compiler-plugin.version>
+        <jacoco-version>0.8.15</jacoco-version>
+        <checkstyle-maven-plugin.version>3.6.0</checkstyle-maven-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.release>17</maven.compiler.release>
@@ -101,6 +103,55 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-version}</version>
+                <configuration>
+                    <append>true</append>
+                    <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
+                    <formats>
+                        <format>XML</format>
+                        <format>HTML</format>
+                    </formats>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <configLocation>src/main/resources/checkstyle.xml</configLocation>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                    <linkXRef>false</linkXRef>
+                    <maxAllowedViolations>10</maxAllowedViolations>
+                    <failOnViolation>true</failOnViolation>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                </configuration>
             </plugin>
         </plugins>
     </build>
