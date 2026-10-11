@@ -39,9 +39,9 @@ public class LocationGateway implements LocationResolver {
    * Resolves a location by its identifier.
    *
    * @param identifier the location identification, e.g. {@code ZWOLLE-001}. Matching ignores
-   *                   surrounding whitespace and casing.
+   *     surrounding whitespace and casing.
    * @return the matching {@link Location}, or {@code null} when no location matches. Translating
-   * the absence into a business error is the responsibility of the domain layer.
+   *     the absence into a business error is the responsibility of the domain layer.
    */
   @Override
   public Location resolveByIdentifier(String identifier) {
@@ -50,5 +50,4 @@ public class LocationGateway implements LocationResolver {
     }
 
     return LOCATIONS_BY_IDENTIFIER.get(identifier.trim().toUpperCase());
-  }
-}
+  }}
