@@ -1,0 +1,167 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    <!-- Remove or comment out JavadocPackage to suppress the error -->
+    <!-- <module name="JavadocPackage"/> -->
+
+        <property name="charset" value="UTF-8"/>
+        <property name="severity" value="error"/> <!--Break build for all the below violations -->
+
+        <module name="TreeWalker">
+
+            <module name="UnusedLocalVariable"/> <!-- Checks that a local variable is declared and/or assigned, but not used -->
+            <module name="VariableDeclarationUsageDistance">
+                <property name="allowedDistance" value="5"/>
+            </module> <!-- Checks the distance between declaration of variable and its first usage -->
+            <module name="EqualsAvoidNull"> <!-- Checks that any combination of String literals is on the left side of an equals() comparison e.g nullableVariable.equals("My_Sweet_String"); is a violation -->
+                <property name="ignoreEqualsIgnoreCase" value="true"/>
+            </module>
+            <module name="FallThrough"/> <!-- Finds locations where a case contains Java code but lacks a break, return, yield, throw or continue statement. -->
+            <module name="IllegalThrows"/> <!-- Checks that specified types are not declared to be thrown. Declaring that a method throws java.lang.Error or java.lang.RuntimeException is almost never acceptable. -->
+
+            <module name="IllegalTokenText"> <!-- see https://checkstyle.sourceforge.io/config_coding.html#IllegalTokenText -->
+                <property name="tokens" value="STRING_LITERAL, CHAR_LITERAL"/>
+                <property name="format"
+                          value="\\u00(08|09|0(a|A)|0(c|C)|0(d|D)|22|27|5(C|c))|\\(0(10|11|12|14|15|42|47)|134)"/>
+                <property name="message" value="Avoid using corresponding octal or Unicode escape."/>
+            </module>
+            <module name="AvoidEscapedUnicodeCharacters"> <!--see https://checkstyle.sourceforge.io/config_misc.html#AvoidEscapedUnicodeCharacters -->
+                <property name="allowEscapesForControlCharacters" value="true"/>
+                <property name="allowByTailComment" value="true"/>
+                <property name="allowNonPrintableEscapes" value="true"/>
+            </module>
+            <module name="AvoidStarImport"/> <!-- -->
+            <module name="UnusedImports"/> <!-- Checks for unused import statements. Checkstyle uses a simple but very reliable algorithm to report on unused import statements. -->
+            <module name="RedundantImport"/>
+            <module name="OneTopLevelClass"/> <!-- Checks that each top-level class, interface, enum or annotation resides in a source file of its own -->
+            <module name="NoLineWrap"/> <!-- Checks that chosen statements are not line-wrapped.-->
+            <module name="EmptyBlock"> <!-- Checks for empty blocks. This check does not validate sequential blocks. example,   try { // violation } catch (Exception e) {// ignored} -->
+                <property name="option" value="TEXT"/>
+                <property name="tokens" value="LITERAL_TRY, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE, LITERAL_SWITCH"/>
+            </module>
+            <module name="NeedBraces"/> <!-- see https://checkstyle.sourceforge.io/config_blocks.html#NeedBraces for more options-->
+            <module name="RightCurly">
+                <property name="id" value="RightCurlySame"/>
+                <property name="tokens"
+                          value="LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE, LITERAL_DO"/>
+            </module>
+            <module name="RightCurly"> <!-- Checks the placement of right curly braces ('}') for code blocks -->
+                <property name="id" value="RightCurlyAlone"/>
+                <property name="option" value="alone"/>
+                <property name="tokens"
+                          value="CLASS_DEF, METHOD_DEF, CTOR_DEF, LITERAL_FOR, LITERAL_WHILE, STATIC_INIT, INSTANCE_INIT"/>
+            </module>
+            <module name="WhitespaceAround">
+                <property name="allowEmptyConstructors" value="true"/>
+                <property name="allowEmptyMethods" value="false"/>
+                <property name="allowEmptyTypes" value="false"/>
+                <property name="allowEmptyLoops" value="false"/>
+            </module>
+            <module name="OneStatementPerLine"/> <!-- Checks the following types of statements: variable declaration statements, empty statements e.g int var1; int var2; is a violation -->
+            <module name="MultipleVariableDeclarations"/> <!-- Checks that each variable declaration is in its own statement and on its own line.-->
+            <module name="ArrayTypeStyle"/> <!-- This check strictly enforces only Java style for method return types  e.g int[] nums; // OK , String strings[]; // violation -->
+            <module name="MissingSwitchDefault"/> <!-- Checks that switch statement has a default clause. -->
+            <module name="UpperEll"/> <!-- Checks that long constants are defined with an upper ell -->
+            <module name="ModifierOrder"/> <!-- Checks that the order of modifiers conforms to the suggestions in the Java Language specification -->
+            <module name="SeparatorWrap"> <!-- only allow line wraps from a dot notation or new line-->
+                <property name="id" value="SeparatorWrapDot"/>
+                <property name="tokens" value="DOT"/>
+                <property name="option" value="nl"/>
+            </module>
+            <module name="PackageName"> <!-- Checks that package names conform to a specified pattern. -->
+                <property name="format" value="^[a-z]+(\.[a-z_][a-z0-9_]*)*$"/>
+                <message key="name.invalidPattern"
+                         value="Package name ''{0}'' must match pattern ''{1}''."/>
+            </module>
+            <module name="PatternVariableName"> <!-- Checks that pattern variable names conform to a specified pattern -->
+                <property name="format" value="^[a-z](_?[a-zA-Z0-9]+)*$"/>
+            </module>
+            <module name="TypeName"> <!-- Checks that type names conform to a specified pattern. eg enum must match pattern '^[A-Z][a-zA-Z0-9]*$'-->
+                <message key="name.invalidPattern"
+                         value="Type name ''{0}'' must match pattern ''{1}''."/>
+            </module>
+
+            <module name="MemberName"> <!-- Checks that instance variable names conform to a specified pattern. -->
+                <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+                <message key="name.invalidPattern"
+                         value="Member name ''{0}'' must match pattern ''{1}''."/>
+            </module>
+            <module name="ParameterName"> <!-- Checks that method parameter names conform to a specified pattern., see https://checkstyle.sourceforge.io/config_naming.html#ParameterName -->
+                <property name="accessModifiers" value="protected, package, private"/>
+                <property name="format" value="^[a-z]([a-zA-Z0-9]*)?$"/>
+                <message key="name.invalidPattern"
+                         value="Parameter name ''{0}'' must match pattern ''{1}''."/>
+            </module>
+            <module name="ParameterName"> <!-- Checks that method parameter names conform to a specified pattern. see https://checkstyle.sourceforge.io/config_naming.html#ParameterName -->
+                <property name="accessModifiers" value="public"/>
+                <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+                <message key="name.invalidPattern"
+                         value="Parameter name ''{0}'' must match pattern ''{1}''."/>
+            </module>
+            <module name="LocalVariableName"> <!-- Checks that local, non-final variable names conform to a specified pattern -->
+                <property name="tokens" value="VARIABLE_DEF"/>
+                <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+                <property name="allowOneCharVarInForLoop" value="true"/>
+                <message key="name.invalidPattern"
+                         value="Local variable name ''{0}'' must match pattern ''{1}''."/>
+            </module>
+            <module name="ConstantName"> <!-- Checks that constant names conform to a specified pattern. A constant is a static and final field or an interface/annotation field, except serialVersionUID and serialPersistentFields. -->
+                <property name="format"
+                          value="^log(ger)?$|^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$|^[a-z][a-zA-Z0-9]*$"/>
+            </module>
+            <module name="ClassTypeParameterName"> <!-- class MyClass2<t> {} is wrong , class MyClass1<T> {} is OK, class MyClass4<LISTENER> {} is wrong -->
+                <property name="format" value="^[A-Z]{2,}$"/>
+                <message key="name.invalidPattern"
+                         value="Class type name ''{0}'' must match pattern ''{1}''."/>
+            </module>
+            <module name="MethodTypeParameterName"> <!--see https://checkstyle.sourceforge.io/config_naming.html#MethodTypeParameterName for details -->
+                <property name="format" value="^[A-Z]$"/>
+                <message key="name.invalidPattern"
+                         value="Method type name ''{0}'' must match pattern ''{1}''."/>
+            </module>
+            <module name="InterfaceTypeParameterName"> <!--see https://checkstyle.sourceforge.io/config_naming.html#InterfaceTypeParameterName for details -->
+                <property name="format" value="^[A-Z]$"/>
+                <message key="name.invalidPattern"
+                         value="Interface type name ''{0}'' must match pattern ''{1}''."/>
+            </module>
+            <module name="NoFinalizer"/> <!--see https://checkstyle.sourceforge.io/config_coding.html#NoFinalizer for details-->
+            <module name="GenericWhitespace"> <!-- see https://checkstyle.sourceforge.io/config_whitespace.html#GenericWhitespace for details-->
+                <message key="ws.followed"
+                         value="GenericWhitespace ''{0}'' is followed by whitespace."/>
+                <message key="ws.preceded"
+                         value="GenericWhitespace ''{0}'' is preceded with whitespace."/>
+                <message key="ws.illegalFollow"
+                         value="GenericWhitespace ''{0}'' should followed by whitespace."/>
+                <message key="ws.notPreceded"
+                         value="GenericWhitespace ''{0}'' is not preceded with whitespace."/>
+            </module>
+            <module name="OverloadMethodsDeclarationOrder"/><!--see https://checkstyle.sourceforge.io/config_coding.html#OverloadMethodsDeclarationOrder for details -->
+            <module name="MethodParamPad"/>
+            <module name="ParenPad"/>
+            <module name="OperatorWrap">
+                <property name="option" value="NL"/>
+                <property name="tokens"
+                          value="BAND, BOR, BSR, BXOR, DIV, EQUAL, GE, GT, LAND, LE, LITERAL_INSTANCEOF, LOR, LT, MINUS, MOD, NOT_EQUAL, PLUS, QUESTION, SL, SR, STAR, METHOD_REF "/>
+            </module>
+            <module name="JavadocMethod"/> <!-- see https://checkstyle.sourceforge.io/config_javadoc.html#JavadocMethod for details  [Need to fix] -->
+            <module name="JavadocType">
+                <property name="severity" value="ignore"/> <!-- to enable this remove this entry-->
+            </module>
+            <module name="JavadocVariable">  <!--see https://checkstyle.sourceforge.io/config_javadoc.html#JavadocVariable for details  [Need to fix] -->
+                <property name="severity" value="ignore"/> <!-- to enable this remove this entry-->
+            </module>
+            <module name="JavadocStyle"> <!-- see https://checkstyle.sourceforge.io/config_javadoc.html#JavadocStyle for details [Need to fix] -->
+                <property name="severity" value="ignore"/>
+            </module>
+            <module name="MethodName"> <!-- Checks that method names conform to a specified pattern. -->
+                <property name="format" value="^[a-z](_?[a-zA-Z0-9]+)*$"/>
+                <message key="name.invalidPattern" value="Method name ''{0}'' must match pattern ''{1}''."/>
+            </module>
+            <module name="IllegalCatch"> <!-- Checks that certain exception types do not appear in a catch statement. https://checkstyle.sourceforge.io/config_coding.html#IllegalCatch-->
+                <property name="illegalClassNames" value="Throwable,Error"/>
+            </module>
+        </module>
+</module>

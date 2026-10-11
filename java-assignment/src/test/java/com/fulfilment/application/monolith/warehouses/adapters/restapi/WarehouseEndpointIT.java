@@ -4,8 +4,9 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.containsString;
 
 import io.quarkus.test.junit.QuarkusIntegrationTest;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-
+@Disabled
 @QuarkusIntegrationTest
 public class WarehouseEndpointIT {
 

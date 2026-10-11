@@ -1,3 +1,5 @@
 package com.fulfilment.application.monolith.warehouses.domain.usecases;
 
-public class CreateWarehouseUseCaseTest {}
+public class CreateWarehouseUseCaseTest {
+
+}

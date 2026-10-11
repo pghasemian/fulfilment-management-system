@@ -24,7 +24,9 @@ public class Product {
 
   public int stock;
 
-  public Product() {}
+  public Product() {
+
+  }
 
   public Product(String name) {
     this.name = name;
