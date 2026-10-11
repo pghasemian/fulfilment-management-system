@@ -13,6 +13,7 @@
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
         <compiler-plugin.version>3.11.0</compiler-plugin.version>
         <jacoco-version>0.8.15</jacoco-version>
+        <checkstyle-maven-plugin.version>3.6.0</checkstyle-maven-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.release>17</maven.compiler.release>
@@ -114,16 +115,6 @@
                         <format>XML</format>
                         <format>HTML</format>
                     </formats>
-<!--                    <excludes>-->
-<!--                        <exclude>**/*Application.class</exclude>-->
-<!--                        <exclude>**/*Converter.class</exclude>-->
-<!--                        <exclude>**/*Entity.class</exclude>-->
-<!--                        <exclude>**/model/**/**.class</exclude>-->
-<!--                        <exclude>**/utils/**/**.class</exclude>-->
-<!--                        <exclude>**/configuration/**/**.class</exclude>-->
-<!--                        <exclude>**/validator/**.class</exclude>-->
-<!--                        <exclude>**/generated/**.class</exclude>-->
-<!--                    </excludes>-->
                 </configuration>
                 <executions>
                     <execution>
@@ -131,27 +122,6 @@
                             <goal>prepare-agent</goal>
                         </goals>
                     </execution>
-<!--                    <execution>-->
-<!--                        <id>check</id>-->
-<!--                        <goals>-->
-<!--                            <goal>check</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <haltOnFailure>false</haltOnFailure>-->
-<!--                            <rules>-->
-<!--                                <rule>-->
-<!--                                    <element>PACKAGE</element>-->
-<!--                                    <limits>-->
-<!--                                        <limit>-->
-<!--                                            <counter>LINE</counter>-->
-<!--                                            <value>COVEREDRATIO</value>-->
-<!--                                            <minimum>0.80</minimum>-->
-<!--                                        </limit>-->
-<!--                                    </limits>-->
-<!--                                </rule>-->
-<!--                            </rules>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
                     <execution>
                         <id>report</id>
                         <phase>prepare-package</phase>
@@ -160,6 +130,28 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <configLocation>src/main/resources/checkstyle.xml</configLocation>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                    <linkXRef>false</linkXRef>
+                    <maxAllowedViolations>10</maxAllowedViolations>
+                    <failOnViolation>true</failOnViolation>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                </configuration>
             </plugin>
         </plugins>
     </build>

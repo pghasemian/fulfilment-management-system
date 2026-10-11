@@ -27,7 +27,9 @@ public class DbWarehouse {
 
   public LocalDateTime archivedAt;
 
-  public DbWarehouse() {}
+  public DbWarehouse() {
+
+  }
 
   public Warehouse toWarehouse() {
     var warehouse = new Warehouse();
