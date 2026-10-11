@@ -50,4 +50,5 @@ public class LocationGateway implements LocationResolver {
     }
 
     return LOCATIONS_BY_IDENTIFIER.get(identifier.trim().toUpperCase());
-  }}
+  }
+}

@@ -12,7 +12,11 @@ public class Store extends PanacheEntity {
   @Column(length = 40, unique = true)
   public String name;
 
-  public int quantityProductsInStock;
+  /**
+   * Wrapper type without a default on purpose: it allows a PATCH request to distinguish "property
+   * not provided" (null) from an explicit zero. Defaulting happens in the resource layer.
+   */
+  public Integer quantityProductsInStock;
 
   public Store() {
 
