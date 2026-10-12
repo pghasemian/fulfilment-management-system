@@ -2,6 +2,8 @@ package com.fulfilment.application.monolith.exceptions;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fulfilment.application.monolith.fulfilment.FulfilmentNotFoundException;
+import com.fulfilment.application.monolith.fulfilment.FulfilmentValidationException;
 import com.fulfilment.application.monolith.warehouses.domain.exceptions.WarehouseNotFoundException;
 import com.fulfilment.application.monolith.warehouses.domain.exceptions.WarehouseValidationException;
 import jakarta.inject.Inject;
@@ -52,7 +54,13 @@ public class RestExceptionMapper implements ExceptionMapper<Exception> {
     if (exception instanceof WarehouseNotFoundException) {
       return Response.Status.NOT_FOUND.getStatusCode();
     }
+    if (exception instanceof FulfilmentNotFoundException) {
+      return Response.Status.NOT_FOUND.getStatusCode();
+    }
     if (exception instanceof WarehouseValidationException) {
+      return Response.Status.BAD_REQUEST.getStatusCode();
+    }
+    if (exception instanceof FulfilmentValidationException) {
       return Response.Status.BAD_REQUEST.getStatusCode();
     }
     if (exception instanceof WebApplicationException webApplicationException) {
