@@ -1,26 +1,15 @@
 package com.fulfilment.application.monolith.stores;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.PATCH;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.ext.ExceptionMapper;
-import jakarta.ws.rs.ext.Provider;
-import java.util.List;
 import org.jboss.logging.Logger;
+
+import java.util.List;
 
 @Path("store")
 @ApplicationScoped
@@ -28,7 +17,9 @@ import org.jboss.logging.Logger;
 @Consumes("application/json")
 public class StoreResource {
 
-  @Inject Event<StoreEvent> storeEvent;
+  @Inject Event<StoreEvent.StoreCreated> storeCreatedEvent;
+
+  @Inject Event<StoreEvent.StoreUpdated> storeUpdatedEvent;
 
   private static final Logger LOGGER = Logger.getLogger(StoreResource.class.getName());
 
@@ -61,10 +52,10 @@ public class StoreResource {
     }
 
     store.persist();
-
     LOGGER.infof("Created store '%s' with id %d", store.name, store.id);
 
-    storeEvent.fire(new StoreEvent(store, StoreEvent.Type.CREATED));
+    // Only delivered once this transaction commits, so the legacy system never sees phantom data.
+    storeCreatedEvent.fire(StoreEvent.StoreCreated.of(store));
 
     return Response.ok(store).status(201).build();
   }
@@ -85,11 +76,10 @@ public class StoreResource {
 
     entity.name = updatedStore.name;
     entity.quantityProductsInStock =
-            updatedStore.quantityProductsInStock == null ? 0 : updatedStore.quantityProductsInStock;
-
+        updatedStore.quantityProductsInStock == null ? 0 : updatedStore.quantityProductsInStock;
     LOGGER.infof("Updated store with id %d", id);
 
-    storeEvent.fire(new StoreEvent(entity, StoreEvent.Type.UPDATED));
+    storeUpdatedEvent.fire(StoreEvent.StoreUpdated.of(entity));
 
     return entity;
   }
@@ -108,6 +98,7 @@ public class StoreResource {
       throw new WebApplicationException("Store with id of " + id + " does not exist.", 404);
     }
 
+    // A PATCH is a partial update: only the properties present in the payload are applied.
     if (updatedStore.name != null) {
       if (updatedStore.name.isBlank()) {
         throw new WebApplicationException("Store Name cannot be blank.", 422);
@@ -115,16 +106,12 @@ public class StoreResource {
       entity.name = updatedStore.name;
     }
 
-    if (entity.quantityProductsInStock != 0) {
-      entity.quantityProductsInStock = updatedStore.quantityProductsInStock;
-    }
-
     if (updatedStore.quantityProductsInStock != null) {
       entity.quantityProductsInStock = updatedStore.quantityProductsInStock;
     }
     LOGGER.infof("Patched store with id %d", id);
 
-    storeEvent.fire(new StoreEvent(entity, StoreEvent.Type.UPDATED));
+    storeUpdatedEvent.fire(StoreEvent.StoreUpdated.of(entity));
 
     return entity;
   }
@@ -140,31 +127,5 @@ public class StoreResource {
     entity.delete();
     LOGGER.infof("Deleted store with id %d", id);
     return Response.status(204).build();
-  }
-
-  @Provider
-  public static class ErrorMapper implements ExceptionMapper<Exception> {
-
-    @Inject ObjectMapper objectMapper;
-
-    @Override
-    public Response toResponse(Exception exception) {
-      LOGGER.error("Failed to handle request", exception);
-
-      int code = 500;
-      if (exception instanceof WebApplicationException) {
-        code = ((WebApplicationException) exception).getResponse().getStatus();
-      }
-
-      ObjectNode exceptionJson = objectMapper.createObjectNode();
-      exceptionJson.put("exceptionType", exception.getClass().getName());
-      exceptionJson.put("code", code);
-
-      if (exception.getMessage() != null) {
-        exceptionJson.put("error", exception.getMessage());
-      }
-
-      return Response.status(code).entity(exceptionJson).build();
-    }
   }
 }
