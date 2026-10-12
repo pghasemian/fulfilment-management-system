@@ -73,7 +73,7 @@ paths:
   /warehouse/{businessUnitCode}/replacement:
     post:
       summary: Replace the current active Warehouse
-      description: | 
+      description: |
         Replaces the current active Warehouse identified by `businessUnitCode` unit by a new Warehouse provided in the request body
         A Warehouse can be replaced by another Warehouse with the same Business Unit Code. 
         That means that the previous Warehouse will be archived and the new Warehouse will be created assuming its place.

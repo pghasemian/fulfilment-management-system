@@ -1,11 +1,8 @@
 package com.fulfilment.application.monolith.warehouses.adapters.database;
 
 import com.fulfilment.application.monolith.warehouses.domain.models.Warehouse;
-import jakarta.persistence.Cacheable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,8 +12,10 @@ public class DbWarehouse {
 
   @Id @GeneratedValue public Long id;
 
+  @Column(nullable = false)
   public String businessUnitCode;
 
+  @Column(nullable = false)
   public String location;
 
   public Integer capacity;
@@ -27,12 +26,25 @@ public class DbWarehouse {
 
   public LocalDateTime archivedAt;
 
-  public DbWarehouse() {
+  public DbWarehouse() {}
 
+  public DbWarehouse(Warehouse warehouse) {
+    this.applyFrom(warehouse);
+  }
+
+  /** Copies the mutable state of a domain Warehouse onto this row. The id is never overwritten. */
+  public void applyFrom(Warehouse warehouse) {
+    this.businessUnitCode = warehouse.businessUnitCode;
+    this.location = warehouse.location;
+    this.capacity = warehouse.capacity;
+    this.stock = warehouse.stock;
+    this.createdAt = warehouse.createdAt;
+    this.archivedAt = warehouse.archivedAt;
   }
 
   public Warehouse toWarehouse() {
     var warehouse = new Warehouse();
+    warehouse.id = this.id;
     warehouse.businessUnitCode = this.businessUnitCode;
     warehouse.location = this.location;
     warehouse.capacity = this.capacity;
