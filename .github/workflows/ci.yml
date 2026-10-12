@@ -38,7 +38,7 @@ jobs:
 
       - name: Build, run unit and integration tests, enforce the coverage gate
         working-directory: java-assignment
-        run: ./mvnw -B verify -DskipITs=false
+        run: ./mvnw -B clean verify -DskipITs=false
 
       - name: Publish the JaCoCo report
         if: always()
