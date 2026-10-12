@@ -1,51 +1,64 @@
 package com.fulfilment.application.monolith.stores;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import org.jboss.logging.Logger;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * Simulates the integration with the legacy system that mirrors our {@link Store} register.
+ *
+ * <p>The "remote call" is emulated by writing a temporary file. Callers must invoke this gateway
+ * only after the local transaction has been committed - see {@link StoreLegacySyncListener}.
+ */
 @ApplicationScoped
 public class LegacyStoreManagerGateway {
 
+  private static final Logger LOGGER = Logger.getLogger(LegacyStoreManagerGateway.class);
+
   public void createStoreOnLegacySystem(Store store) {
-    // just to emulate as this would send this to a legacy system, let's write a temp file with the
-    writeToFile(store);
+    writeToFile("Store created", store);
   }
 
   public void updateStoreOnLegacySystem(Store store) {
-    // just to emulate as this would send this to a legacy system, let's write a temp file with the
-    writeToFile(store);
+    writeToFile("Store updated", store);
   }
 
-  private void writeToFile(Store store) {
+  private void writeToFile(String operation, Store store) {
+    Path tempFile = null;
     try {
-      // Step 1: Create a temporary file
-      Path tempFile;
-
       tempFile = Files.createTempFile(store.name, ".txt");
 
-      System.out.println("Temporary file created at: " + tempFile.toString());
-
-      // Step 2: Write data to the temporary file
       String content =
-          "Store created. [ name ="
+          operation
+              + ". [ name ="
               + store.name
               + " ] [ items on stock ="
               + store.quantityProductsInStock
               + "]";
-      Files.write(tempFile, content.getBytes());
-      System.out.println("Data written to temporary file.");
+      Files.write(tempFile, content.getBytes(StandardCharsets.UTF_8));
 
-      // Step 3: Optionally, read the data back to verify
-      String readContent = new String(Files.readAllBytes(tempFile));
-      System.out.println("Data read from temporary file: " + readContent);
+      LOGGER.debugf("Synchronised store '%s' with the legacy system: %s", store.name, content);
+    } catch (IOException e) {
+      throw new UncheckedIOException(
+          "Could not synchronise store '" + store.name + "' with the legacy system", e);
+    } finally {
+      deleteQuietly(tempFile);
+    }
+  }
 
-      // Step 4: Delete the temporary file when done
-      Files.delete(tempFile);
-      System.out.println("Temporary file deleted.");
-
-    } catch (Exception e) {
-      e.printStackTrace();
+  private void deleteQuietly(Path tempFile) {
+    if (tempFile == null) {
+      return;
+    }
+    try {
+      Files.deleteIfExists(tempFile);
+    } catch (IOException e) {
+      LOGGER.warnf(e, "Could not delete temporary file %s", tempFile);
     }
   }
 }

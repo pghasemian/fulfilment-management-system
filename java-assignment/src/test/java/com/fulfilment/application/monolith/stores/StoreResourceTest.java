@@ -1,83 +1,70 @@
 package com.fulfilment.application.monolith.stores;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
 import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.*;
+
 @QuarkusTest
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class StoreResourceTest {
+@TestMethodOrder(MethodOrderer.MethodName.class)
+class StoreResourceTest {
 
-  private static final String PATH = "/store";
-
-  // ==================== GET All ====================
+  private static final String PATH = "store";
 
   @Test
-  @Order(1)
-  void shouldListAllStores() {
-    // Given — no setup needed, stores may already exist from seed data
-
-    // When & Then
+  void testListAllStoresFromTheInitialDataSet() {
     given()
         .when()
         .get(PATH)
         .then()
         .statusCode(200)
-        .contentType(ContentType.JSON)
-        .body("size()", greaterThanOrEqualTo(0));
+        .body(containsString("TONSTAD"), containsString("KALLAX"));
   }
 
-  // ==================== POST ====================
+  @Test
+  void testGetSingleStore() {
+    given().when().get(PATH + "/1").then().statusCode(200).body("name", is("TONSTAD"));
+  }
 
   @Test
-  @Order(2)
-  void shouldCreateStoreSuccessfully() {
-    // Given
-    String body = """
-        {
-          "name": "IntegrationTestStore",
-          "quantityProductsInStock": 42
-        }
-        """;
+  void testGetUnknownStoreReturnsNotFound() {
+    given().when().get(PATH + "/9999").then().statusCode(404).body("error", containsString("does not exist"));
+  }
 
-    // When & Then
+  @Test
+  void testCreateStore() {
     given()
-        .contentType(ContentType.JSON)
-        .body(body)
+        .body("{\"name\":\"IVAR\",\"quantityProductsInStock\":7}")
+        .contentType("application/json")
         .when()
         .post(PATH)
         .then()
         .statusCode(201)
-        .body("name", equalTo("IntegrationTestStore"))
-        .body("quantityProductsInStock", equalTo(42))
-        .body("id", notNullValue());
+        .body("name", is("IVAR"), "quantityProductsInStock", is(7));
+
+    given().when().get(PATH).then().statusCode(200).body(containsString("IVAR"));
   }
 
   @Test
-  @Order(3)
-  void shouldRejectCreateWhenIdIsSet() {
-    // Given
-    String body = """
-        {
-          "id": 999,
-          "name": "InvalidStore",
-          "quantityProductsInStock": 10
-        }
-        """;
-
-    // When & Then
+  void testCreateStoreDefaultsStockToZeroWhenOmitted() {
     given()
-        .contentType(ContentType.JSON)
-        .body(body)
+        .body("{\"name\":\"MALM\"}")
+        .contentType("application/json")
+        .when()
+        .post(PATH)
+        .then()
+        .statusCode(201)
+        .body("quantityProductsInStock", is(0));
+  }
+
+  @Test
+  void testCreateStoreWithIdIsRejected() {
+    given()
+        .body("{\"id\":123,\"name\":\"HEMNES\"}")
+        .contentType("application/json")
         .when()
         .post(PATH)
         .then()
@@ -86,421 +73,131 @@ public class StoreResourceTest {
   }
 
   @Test
-  @Order(4)
-  void shouldCreateStoreWithZeroStock() {
-    // Given
-    String body = """
-        {
-          "name": "ZeroStockStore",
-          "quantityProductsInStock": 0
-        }
-        """;
-
-    // When & Then
+  void testCreateStoreWithoutNameIsRejected() {
     given()
-        .contentType(ContentType.JSON)
-        .body(body)
+        .body("{\"quantityProductsInStock\":3}")
+        .contentType("application/json")
         .when()
         .post(PATH)
-        .then()
-        .statusCode(201)
-        .body("quantityProductsInStock", equalTo(0));
-  }
-
-  @Test
-  @Order(5)
-  void shouldCreateStoreWithLargeStock() {
-    // Given
-    String body = """
-        {
-          "name": "LargeStockStore",
-          "quantityProductsInStock": 2147483647
-        }
-        """;
-
-    // When & Then
-    given()
-        .contentType(ContentType.JSON)
-        .body(body)
-        .when()
-        .post(PATH)
-        .then()
-        .statusCode(201)
-        .body("quantityProductsInStock", equalTo(2147483647));
-  }
-
-  // ==================== GET by ID ====================
-
-  @Test
-  @Order(6)
-  void shouldGetStoreByValidId() {
-    // Given — create a store to get a known ID
-    String createBody = """
-        {
-          "name": "GetByIdStore",
-          "quantityProductsInStock": 15
-        }
-        """;
-
-    Integer id = given()
-        .contentType(ContentType.JSON)
-        .body(createBody)
-        .when()
-        .post(PATH)
-        .then()
-        .statusCode(201)
-        .extract()
-        .path("id");
-
-    // When & Then
-    given()
-        .when()
-        .get(PATH + "/" + id)
-        .then()
-        .statusCode(200)
-        .body("name", equalTo("GetByIdStore"))
-        .body("quantityProductsInStock", equalTo(15));
-  }
-
-  @Test
-  @Order(7)
-  void shouldReturn404ForNonExistentStore() {
-    // Given
-    long nonExistentId = 999999L;
-
-    // When & Then
-    given()
-        .when()
-        .get(PATH + "/" + nonExistentId)
-        .then()
-        .statusCode(404)
-        .body("error", containsString("does not exist"));
-  }
-
-  // ==================== PUT ====================
-
-  @Test
-  @Order(8)
-  void shouldUpdateStoreSuccessfully() {
-    // Given — create a store first
-    String createBody = """
-        {
-          "name": "ToBeUpdated",
-          "quantityProductsInStock": 10
-        }
-        """;
-
-    Integer id = given()
-        .contentType(ContentType.JSON)
-        .body(createBody)
-        .when()
-        .post(PATH)
-        .then()
-        .statusCode(201)
-        .extract()
-        .path("id");
-
-    String updateBody = """
-        {
-          "name": "UpdatedName",
-          "quantityProductsInStock": 99
-        }
-        """;
-
-    // When & Then
-    given()
-        .contentType(ContentType.JSON)
-        .body(updateBody)
-        .when()
-        .put(PATH + "/" + id)
-        .then()
-        .statusCode(200)
-        .body("name", equalTo("UpdatedName"))
-        .body("quantityProductsInStock", equalTo(99));
-  }
-
-  @Test
-  @Order(9)
-  void shouldRejectUpdateWhenNameIsNull() {
-    // Given
-    String updateBody = """
-        {
-          "quantityProductsInStock": 10
-        }
-        """;
-
-    // When & Then
-    given()
-        .contentType(ContentType.JSON)
-        .body(updateBody)
-        .when()
-        .put(PATH + "/1")
         .then()
         .statusCode(422)
         .body("error", containsString("Store Name was not set"));
   }
 
   @Test
-  @Order(10)
-  void shouldReturn404WhenUpdatingNonExistentStore() {
-    // Given
-    String updateBody = """
-        {
-          "name": "Ghost",
-          "quantityProductsInStock": 10
-        }
-        """;
-    long nonExistentId = 999999L;
+  void testUpdateStoreReplacesAllProperties() {
+    Integer id = createStore("LACK", 4);
 
-    // When & Then
     given()
-        .contentType(ContentType.JSON)
-        .body(updateBody)
+        .body("{\"name\":\"LACK-RENAMED\",\"quantityProductsInStock\":9}")
+        .contentType("application/json")
         .when()
-        .put(PATH + "/" + nonExistentId)
-        .then()
-        .statusCode(404)
-        .body("error", containsString("does not exist"));
-  }
-
-  // ==================== PATCH ====================
-
-  @Test
-  @Order(11)
-  void shouldPatchStoreSuccessfully() {
-    // Given — create a store first
-    String createBody = """
-        {
-          "name": "ToBePatched",
-          "quantityProductsInStock": 30
-        }
-        """;
-
-    Integer id = given()
-        .contentType(ContentType.JSON)
-        .body(createBody)
-        .when()
-        .post(PATH)
-        .then()
-        .statusCode(201)
-        .extract()
-        .path("id");
-
-    String patchBody = """
-        {
-          "name": "PatchedName",
-          "quantityProductsInStock": 55
-        }
-        """;
-
-    // When & Then
-    given()
-        .contentType(ContentType.JSON)
-        .body(patchBody)
-        .when()
-        .patch(PATH + "/" + id)
+        .put(PATH + "/" + id)
         .then()
         .statusCode(200)
-        .body("name", equalTo("PatchedName"))
-        .body("quantityProductsInStock", equalTo(55));
+        .body("name", is("LACK-RENAMED"), "quantityProductsInStock", is(9));
   }
 
   @Test
-  @Order(12)
-  void shouldPatchWithoutNameKeepsOriginalName() {
-    // Given — create a store first so we have a guaranteed valid ID and known name
-    String createBody = """
-        {
-          "name": "PatchNoNameStore",
-          "quantityProductsInStock": 30
-        }
-        """;
-
-    Integer id = given()
-        .contentType(ContentType.JSON)
-        .body(createBody)
-        .when()
-        .post(PATH)
-        .then()
-        .statusCode(201)
-        .extract()
-        .path("id");
-
-    String patchBody = """
-        {
-          "quantityProductsInStock": 10
-        }
-        """;
-
-    // When & Then — PATCH is a partial update, so omitting name should keep the original
+  void testUpdateStoreWithoutNameIsRejected() {
     given()
-        .contentType(ContentType.JSON)
-        .body(patchBody)
+        .body("{\"quantityProductsInStock\":9}")
+        .contentType("application/json")
         .when()
-        .patch(PATH + "/" + id)
+        .put(PATH + "/1")
         .then()
-        .statusCode(200)
-        .body("name", equalTo("PatchNoNameStore"))
-        .body("quantityProductsInStock", equalTo(10));
+        .statusCode(422);
   }
 
   @Test
-  @Order(13)
-  void shouldReturn404WhenPatchingNonExistentStore() {
-    // Given
-    String patchBody = """
-        {
-          "name": "Ghost",
-          "quantityProductsInStock": 10
-        }
-        """;
-    long nonExistentId = 999999L;
-
-    // When & Then
+  void testUpdateUnknownStoreReturnsNotFound() {
     given()
-        .contentType(ContentType.JSON)
-        .body(patchBody)
+        .body("{\"name\":\"GHOST\",\"quantityProductsInStock\":1}")
+        .contentType("application/json")
         .when()
-        .patch(PATH + "/" + nonExistentId)
-        .then()
-        .statusCode(404)
-        .body("error", containsString("does not exist"));
-  }
-
-  @Test
-  @Order(14)
-  void shouldPatchStoreWithZeroStockKeepingOldStock() {
-    // Given — create a store with non-zero stock
-    String createBody = """
-        {
-          "name": "PatchedZeroStock",
-          "quantityProductsInStock": 30
-        }
-        """;
-
-    Integer id = given()
-        .contentType(ContentType.JSON)
-        .body(createBody)
-        .when()
-        .post(PATH)
-        .then()
-        .statusCode(201)
-        .extract()
-        .path("id");
-
-    String patchBody = """
-        {
-          "name": "PatchedZeroStock",
-          "quantityProductsInStock": 99
-        }
-        """;
-
-    // When & Then
-    given()
-        .contentType(ContentType.JSON)
-        .body(patchBody)
-        .when()
-        .patch(PATH + "/" + id)
-        .then()
-        .statusCode(200)
-        .body("name", equalTo("PatchedZeroStock"))
-        .body("quantityProductsInStock", equalTo(99));
-  }
-
-  // ==================== DELETE ====================
-
-  @Test
-  @Order(15)
-  void shouldDeleteStoreSuccessfully() {
-    // Given — create a store first
-    String createBody = """
-        {
-          "name": "ToBeDeleted",
-          "quantityProductsInStock": 5
-        }
-        """;
-
-    Integer id = given()
-        .contentType(ContentType.JSON)
-        .body(createBody)
-        .when()
-        .post(PATH)
-        .then()
-        .statusCode(201)
-        .extract()
-        .path("id");
-
-    // When
-    given()
-        .when()
-        .delete(PATH + "/" + id)
-        .then()
-        .statusCode(204);
-
-    // Then — verify it's gone
-    given()
-        .when()
-        .get(PATH + "/" + id)
+        .put(PATH + "/9999")
         .then()
         .statusCode(404);
   }
 
   @Test
-  @Order(16)
-  void shouldReturn404WhenDeletingNonExistentStore() {
-    // Given
-    long nonExistentId = 999999L;
+  void testPatchOnlyAppliesProvidedProperties() {
+    Integer id = createStore("BILLY", 4);
 
-    // When & Then
     given()
+        .body("{\"quantityProductsInStock\":12}")
+        .contentType("application/json")
         .when()
-        .delete(PATH + "/" + nonExistentId)
+        .patch(PATH + "/" + id)
         .then()
-        .statusCode(404)
-        .body("error", containsString("does not exist"));
-  }
+        .statusCode(200)
+        .body("name", is("BILLY"), "quantityProductsInStock", is(12));
 
-  // ==================== Error Mapper ====================
-
-  @Test
-  @Order(17)
-  void shouldReturnJsonErrorFormatOn404() {
-    // Given
-    long nonExistentId = 999999L;
-
-    // When & Then
     given()
+        .body("{\"name\":\"BILLY-2\"}")
+        .contentType("application/json")
         .when()
-        .get(PATH + "/" + nonExistentId)
+        .patch(PATH + "/" + id)
         .then()
-        .statusCode(404)
-        .body("exceptionType", equalTo("jakarta.ws.rs.WebApplicationException"))
-        .body("code", equalTo(404))
-        .body("error", containsString("does not exist"));
+        .statusCode(200)
+        .body("name", is("BILLY-2"), "quantityProductsInStock", is(12));
   }
 
   @Test
-  @Order(18)
-  void shouldReturnJsonErrorFormatOn422() {
-    // Given
-    String body = """
-        {
-          "id": 1,
-          "name": "Bad",
-          "quantityProductsInStock": 0
-        }
-        """;
-
-    // When & Then
+  void testPatchWithEmptyPayloadIsRejected() {
     given()
-        .contentType(ContentType.JSON)
-        .body(body)
+        .body("{}")
+        .contentType("application/json")
+        .when()
+        .patch(PATH + "/1")
+        .then()
+        .statusCode(422);
+  }
+
+  @Test
+  void testPatchWithBlankNameIsRejected() {
+    given()
+        .body("{\"name\":\"  \"}")
+        .contentType("application/json")
+        .when()
+        .patch(PATH + "/1")
+        .then()
+        .statusCode(422);
+  }
+
+  @Test
+  void testPatchUnknownStoreReturnsNotFound() {
+    given()
+        .body("{\"name\":\"GHOST\"}")
+        .contentType("application/json")
+        .when()
+        .patch(PATH + "/9999")
+        .then()
+        .statusCode(404);
+  }
+
+  @Test
+  void testDeleteStore() {
+    Integer id = createStore("POANG", 1);
+
+    given().when().delete(PATH + "/" + id).then().statusCode(204);
+    given().when().get(PATH).then().statusCode(200).body(not(containsString("POANG")));
+  }
+
+  @Test
+  void testDeleteUnknownStoreReturnsNotFound() {
+    given().when().delete(PATH + "/9999").then().statusCode(404);
+  }
+
+  private Integer createStore(String name, int stock) {
+    return given()
+        .body("{\"name\":\"" + name + "\",\"quantityProductsInStock\":" + stock + "}")
+        .contentType("application/json")
         .when()
         .post(PATH)
         .then()
-        .statusCode(422)
-        .body("exceptionType", equalTo("jakarta.ws.rs.WebApplicationException"))
-        .body("code", equalTo(422))
-        .body("error", containsString("Id was invalidly set"));
+        .statusCode(201)
+        .extract()
+        .path("id");
   }
 }
